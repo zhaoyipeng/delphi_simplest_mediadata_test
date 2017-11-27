@@ -3,9 +3,13 @@
 interface
 
 uses
+  Winapi.Windows,
   System.Classes,
   System.SysUtils,
   System.Math;
+
+const
+  OUTPUT_DIR = 'output\';
 
 /// <summary>
 /// Split Y, U, V planes in YUV420P file.
@@ -78,6 +82,24 @@ function simplest_yuv420_graybar(width, height, ymin, ymax, barnum: Integer; con
 /// <param name="num">Number of frames to process.</param>
 function simplest_yuv420_psnr(const url1, url2: string; w, h, num: Integer): Integer;
 
+/// <summary>
+/// Split R, G, B planes in RGB24 file.
+/// </summary>
+/// <param name="url">Location of Input RGB file.</param>
+/// <param name="w">Width of Input RGB file.</param>
+/// <param name="h">Height of Input RGB file.</param>
+/// <param name="num">Number of frames to process.</param>
+function simplest_rgb24_split(const url: string; w, h, num: Integer): Integer;
+
+/// <summary>
+/// Convert RGB24 file to BMP file
+/// </summary>
+/// <param name="rgb24path">Location of Input RGB file.</param>
+/// <param name="width">Width of Input RGB file.</param>
+/// <param name="height">Height of Input RGB file.</param>
+/// <param name="bmppath">Location of Output BMP file. </param>
+function simplest_rgb24_to_bmp(const rgb24path: string; width, height: Integer; const bmppath: string): Integer;
+
 implementation
 
 function simplest_yuv420_split(const url: string; w, h, num: Integer): Integer;
@@ -87,9 +109,9 @@ var
   I: Integer;
 begin
   fp := TFileStream.Create(url, fmOpenRead);
-  fp1 := TFileStream.Create('output\output_420_y.y', fmCreate);
-  fp2 := TFileStream.Create('output\output_420_u.y', fmCreate);
-  fp3 := TFileStream.Create('output\output_420_v.y', fmCreate);
+  fp1 := TFileStream.Create(OUTPUT_DIR + 'output_420_y.y', fmCreate);
+  fp2 := TFileStream.Create(OUTPUT_DIR + 'output_420_u.y', fmCreate);
+  fp3 := TFileStream.Create(OUTPUT_DIR + 'output_420_v.y', fmCreate);
 
   SetLength(pic, w * h * 3 div 2);
 
@@ -119,9 +141,9 @@ var
   I: Integer;
 begin
   fp := TFileStream.Create(url, fmOpenRead);
-  fp1 := TFileStream.Create('output\output_444_y.y', fmCreate);
-  fp2 := TFileStream.Create('output\output_444_u.y', fmCreate);
-  fp3 := TFileStream.Create('output\output_444_v.y', fmCreate);
+  fp1 := TFileStream.Create(OUTPUT_DIR + 'output_444_y.y', fmCreate);
+  fp2 := TFileStream.Create(OUTPUT_DIR + 'output_444_u.y', fmCreate);
+  fp3 := TFileStream.Create(OUTPUT_DIR + 'output_444_v.y', fmCreate);
 
   SetLength(pic, w * h * 3);
 
@@ -151,7 +173,7 @@ var
   I: Integer;
 begin
   fp := TFileStream.Create(url, fmOpenRead);
-  fp1 := TFileStream.Create('output\output_gray.yuv', fmCreate);
+  fp1 := TFileStream.Create(OUTPUT_DIR + 'output_gray.yuv', fmCreate);
 
   SetLength(pic, w * h * 3 div 2);
 
@@ -178,7 +200,7 @@ var
   J: Integer;
 begin
   fp := TFileStream.Create(url, fmOpenRead);
-  fp1 := TFileStream.Create('output\output_half.yuv', fmCreate);
+  fp1 := TFileStream.Create(OUTPUT_DIR + 'output_half.yuv', fmCreate);
 
   SetLength(pic, w * h * 3 div 2);
 
@@ -210,7 +232,7 @@ var
   K: Integer;
 begin
   fp := TFileStream.Create(url, fmOpenRead);
-  fp1 := TFileStream.Create('output\output_border.yuv', fmCreate);
+  fp1 := TFileStream.Create(OUTPUT_DIR + 'output_border.yuv', fmCreate);
 
   SetLength(pic, w * h * 3 div 2);
 
@@ -258,7 +280,7 @@ begin
   SetLength(data_u, uv_width * uv_height);
   SetLength(data_v, uv_width * uv_height);
 
-  fp := TFileStream.Create('output\' + url_out, fmCreate);
+  fp := TFileStream.Create(OUTPUT_DIR + url_out, fmCreate);
 
   //Output Info
   Writeln('Y, U, V value from picture''s left to right:');
@@ -336,6 +358,98 @@ begin
   fp2.Free;
   fp1.Free;
 
+  Result := 0;
+end;
+
+function simplest_rgb24_split(const url: string; w, h, num: Integer): Integer;
+var
+  fp, fp1, fp2, fp3: TFileStream;
+  pic: TArray<Byte>;
+  I: Integer;
+  j: Integer;
+begin
+  fp := TFileStream.Create(url, fmOpenRead);
+  fp1 := TFileStream.Create(OUTPUT_DIR + 'output_r.y', fmCreate);
+  fp2 := TFileStream.Create(OUTPUT_DIR + 'output_g.y', fmCreate);
+  fp3 := TFileStream.Create(OUTPUT_DIR + 'output_b.y', fmCreate);
+
+  SetLength(pic, w * h * 3);
+
+  for I := 0 to num - 1 do
+  begin
+    fp.ReadBuffer(pic[0], w * h * 3);
+    j := 0;
+    while j < w * h * 3 do
+    begin
+      //R
+      fp1.WriteBuffer(pic[j], 1);
+      //G
+      fp2.WriteBuffer(pic[j + 1], 1);
+      //B
+      fp3.WriteBuffer(pic[j + 2], 1);
+
+      Inc(j, 3);
+    end;
+  end;
+
+  fp3.Free;
+  fp2.Free;
+  fp1.Free;
+  fp.Free;
+
+  Result := 0;
+end;
+
+function simplest_rgb24_to_bmp(const rgb24path: string; width, height: Integer; const bmppath: string): Integer;
+var
+  m_BMPHeader: TBitmapFileHeader;
+  m_BMPInfoHeader: TBitmapInfoHeader;
+  header_size: Integer;
+  rgb24_buffer: TArray<Byte>;
+  fp_rgb24, fp_bmp: TFileStream;
+  J: Integer;
+  I: Integer;
+  temp: Byte;
+begin
+  FillChar(m_BMPHeader, SizeOf(TBitmapFileHeader), 0);
+  FillChar(m_BMPInfoHeader, SizeOf(TBitmapInfoHeader), 0);
+
+  m_BMPHeader.bfType := $4D42;
+  header_size := SizeOf(TBitmapFileHeader) + SizeOf(TBitmapInfoHeader);
+  fp_rgb24 := TFileStream.Create(rgb24path, fmOpenRead);
+  fp_bmp := TFileStream.Create(OUTPUT_DIR + bmppath, fmCreate);
+
+  SetLength(rgb24_buffer, width * height * 3);
+  fp_rgb24.ReadBuffer(rgb24_buffer[0], width * height * 3);
+
+  m_BMPHeader.bfSize := 3 * width * height + header_size;
+  m_BMPHeader.bfOffBits := header_size;
+
+  m_BMPInfoHeader.biSize := SizeOf(TBitmapInfoHeader);
+  m_BMPInfoHeader.biWidth := width;
+  //BMP storage pixel data in opposite direction of Y-axis (from bottom to top).
+  m_BMPInfoHeader.biHeight := -height;
+  m_BMPInfoHeader.biPlanes := 1;
+  m_BMPInfoHeader.biBitCount := 24;
+  m_BMPInfoHeader.biSizeImage := width * height * 3;
+
+  fp_bmp.WriteBuffer(m_BMPHeader, SizeOf(TBitmapFileHeader));
+  fp_bmp.WriteBuffer(m_BMPInfoHeader, SizeOf(TBitmapInfoHeader));
+
+  //BMP save R1|G1|B1,R2|G2|B2 as B1|G1|R1,B2|G2|R2
+  //It saves pixel data in Little Endian
+  //So we change 'R' and 'B'
+  for J := 0 to height - 1 do
+    for I := 0 to width - 1 do
+    begin
+      temp := rgb24_buffer[(J * width + I) * 3 + 2];
+      rgb24_buffer[(J * width + I) * 3 + 2] := rgb24_buffer[(J * width + I) * 3 + 0];
+      rgb24_buffer[(J * width + I) * 3 + 0] := temp;
+    end;
+  fp_bmp.WriteBuffer(rgb24_buffer, width * height * 3);
+  fp_bmp.Free;
+  fp_rgb24.Free;
+  Writeln(Format('Finish generate %s', [bmppath]));
   Result := 0;
 end;
 

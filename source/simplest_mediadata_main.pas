@@ -17,6 +17,9 @@ begin
   simplest_yuv420_halfy('lena_256x256_yuv420p.yuv',256,256,1);
   simplest_yuv420_graybar(640, 360,0,255,10,'graybar_640x360.yuv');
   simplest_yuv420_psnr('lena_256x256_yuv420p.yuv','lena_distort_256x256_yuv420p.yuv',256,256,1);
+  simplest_rgb24_split('cie1931_500x500.rgb', 500, 500,1);
+  simplest_rgb24_to_bmp('lena_256x256_rgb24.rgb',256,256,'output_lena.bmp');
+
 
 
   Readln;
