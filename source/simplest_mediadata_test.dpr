@@ -7,7 +7,8 @@ program simplest_mediadata_test;
 uses
   System.SysUtils,
   simplest_mediadata_raw in 'simplest_mediadata_raw.pas',
-  simplest_mediadata_main in 'simplest_mediadata_main.pas';
+  simplest_mediadata_main in 'simplest_mediadata_main.pas',
+  simplest_mediadata_h264 in 'simplest_mediadata_h264.pas';
 
 begin
   try
