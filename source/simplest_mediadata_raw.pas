@@ -4,6 +4,7 @@ interface
 
 uses
   Winapi.Windows,
+  Winapi.MMSystem,
   System.Classes,
   System.SysUtils,
   System.Math;
@@ -150,6 +151,17 @@ function simplest_pcm16le_to_pcm8(const url: string): Integer;
 /// <param name="start_num">start point</param>
 /// <param name="dur_num">how much point to cut</param>
 function simplest_pcm16le_cut_singlechannel(const url: string; start_num, dur_num: Integer): Integer;
+
+
+/// <summary>
+///  Convert PCM16LE raw data to WAVE format
+/// </summary>
+/// <param name="pcmpath">Input PCM file.</param>
+/// <param name="channels">Channel number of PCM file.</param>
+/// <param name="sample_rate">Sample rate of PCM file.</param>
+/// <param name="wavepath">Output WAVE file.</param>
+function simplest_pcm16le_to_wave(const pcmpath: string; channels, sample_rate: Integer; const wavepath: string): Integer;
+
 implementation
 
 function simplest_yuv420_split(const url: string; w, h, num: Integer): Integer;
@@ -760,13 +772,13 @@ begin
     samplenum16 := @sample[0];
     samplenum8 := samplenum16^ shr 8;
     //(0-255)
-    samplenum8_u := samplenum8+128;
+    samplenum8_u := samplenum8 + 128;
     // L
     fp1.WriteData(samplenum8_u);
 
     samplenum16 := @sample[2];
     samplenum8 := samplenum16^ shr 8;
-    samplenum8_u := samplenum8+128;
+    samplenum8_u := samplenum8 + 128;
     // R
     fp1.WriteData(samplenum8_u);
     Inc(cnt);
@@ -797,8 +809,8 @@ begin
 
   while fp.Position < fp.Size do
   begin
-    fp.ReadBuffer(sample[0],2);
-    if (cnt>start_num) and (cnt <= (start_num + dur_num)) then
+    fp.ReadBuffer(sample[0], 2);
+    if (cnt > start_num) and (cnt <= (start_num + dur_num)) then
     begin
       fp1.WriteBuffer(sample[0], 2);
       samplenum := sample[1];
@@ -817,5 +829,86 @@ begin
   fp.Free;
   Result := 0;
 end;
+
+function simplest_pcm16le_to_wave(const pcmpath: string; channels, sample_rate: Integer; const wavepath: string): Integer;
+type
+  WAVE_HEADER = packed record
+    fccID: DWORD; {'RIFF'}
+    dwSize: DWORD; {文件大小, 不包括前 8 个字节}
+    fccType: DWORD; {'WAVE'}
+  end;
+
+  WAVE_FMT = packed record
+    fccID: DWORD;
+    dwSize: DWord;
+    wFormatTag: Word;         { format type }
+    wChannels: Word;          { number of channels (i.e. mono, stereo, etc.) }
+    dwSamplesPerSec: DWORD;  { sample rate }
+    dwAvgBytesPerSec: DWORD; { for buffer estimation }
+    wBlockAlign: Word;
+    wBitsPerSample: Word;
+  end;
+
+  WAVE_DATA = packed record
+    fccID: DWORD;
+    dwSize: DWORD;
+  end;
+var
+  bits: Integer;
+  pcmHEADER: WAVE_HEADER;
+  pcmFMT: WAVE_FMT;
+  pcmDATA: WAVE_DATA;
+  m_pcmData: Word;
+  fp, fpout: TFileStream;
+begin
+  if (channels = 0) or (sample_rate = 0) then
+  begin
+    channels := 2;
+    sample_rate := 44100;
+  end;
+  bits := 16;
+
+  fp := TBufferedFileStream.Create(pcmpath, fmOpenRead);
+  fpout := TBufferedFileStream.Create(OUTPUT_DIR + wavepath, fmCreate);
+
+  pcmHEADER.fccID := FOURCC_RIFF;
+  pcmHEADER.fccType := mmioStringToFOURCC('WAVE', 0);
+  fpout.Seek(SizeOf(WAVE_HEADER), TSeekOrigin.soCurrent);
+  //WAVE_FMT
+  pcmFMT.dwSamplesPerSec := sample_rate;
+  pcmFMT.dwAvgBytesPerSec := channels * pcmFMT.dwSamplesPerSec * sizeof(m_pcmData);
+  pcmFMT.wBitsPerSample := bits;
+
+  pcmFMT.fccID := mmioStringToFOURCC('fmt ', 0);
+  pcmFMT.dwSize := 16;
+  pcmFMT.wBlockAlign := channels * bits div 8;
+  pcmFMT.wChannels := channels;
+  pcmFMT.wFormatTag := WAVE_FORMAT_PCM;
+
+  fpout.WriteBuffer(pcmFMT, SizeOf(WAVE_FMT));
+
+  //WAVE_DATA;
+  pcmDATA.fccID := mmioStringToFOURCC('data', 0);
+  pcmDATA.dwSize := 0;
+  fpout.Seek(SizeOf(WAVE_DATA), TSeekOrigin.soCurrent);
+  while (fp.Position < fp.Size) do
+  begin
+    fp.ReadData(m_pcmData);
+    fpout.WriteData(m_pcmData);
+    Inc(pcmDATA.dwSize, 2);
+  end;
+
+  pcmHEADER.dwSize := 36 + pcmDATA.dwSize;
+
+  fpout.Seek(0, TSeekOrigin.soBeginning);
+  fpout.WriteBuffer(pcmHEADER, sizeof(WAVE_HEADER));
+  fpout.Seek(sizeof(WAVE_FMT), TSeekOrigin.soCurrent);
+  fpout.WriteBuffer(pcmDATA, sizeof(WAVE_DATA));
+
+  fpout.Free;
+  fp.Free;
+  Result := 0;
+end;
+
 end.
 
