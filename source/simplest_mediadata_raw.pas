@@ -137,6 +137,19 @@ function simplest_pcm16le_halfvolumeleft(const url: string): Integer;
 /// <param name="url">Location of PCM file.</param>
 function simplest_pcm16le_doublespeed(const url: string): Integer;
 
+/// <summary>
+/// Convert PCM-16 data to PCM-8 data.
+/// </summary>
+/// <param name="url">Location of PCM file.</param>
+function simplest_pcm16le_to_pcm8(const url: string): Integer;
+
+/// <summary>
+/// Cut a 16LE PCM single channel file.
+/// </summary>
+/// <param name="url">Location of PCM file.</param>
+/// <param name="start_num">start point</param>
+/// <param name="dur_num">how much point to cut</param>
+function simplest_pcm16le_cut_singlechannel(const url: string; start_num, dur_num: Integer): Integer;
 implementation
 
 function simplest_yuv420_split(const url: string; w, h, num: Integer): Integer;
@@ -570,7 +583,6 @@ function simplest_rgb24_colorbar(width, height: Integer; const url_out: string):
 var
   data: TArray<Byte>;
   barwidth: Integer;
-  filename: string;
   fp: TBufferedFileStream;
   i, j, barnum: Integer;
 begin
@@ -727,5 +739,83 @@ begin
   Result := 0;
 end;
 
+function simplest_pcm16le_to_pcm8(const url: string): Integer;
+var
+  fp, fp1: TBufferedFileStream;
+  sample: TArray<Byte>;
+  cnt: Integer;
+  samplenum16: PSmallInt;
+  samplenum8: Int8;
+  samplenum8_u: UInt8;
+begin
+  fp := TBufferedFileStream.Create(url, fmOpenRead);
+  fp1 := TBufferedFileStream.Create(OUTPUT_DIR + 'output_8.pcm', fmCreate);
+
+  cnt := 0;
+  SetLength(sample, 4);
+
+  while fp.Position < fp.Size do
+  begin
+    fp.ReadBuffer(sample[0], 4);
+    samplenum16 := @sample[0];
+    samplenum8 := samplenum16^ shr 8;
+    //(0-255)
+    samplenum8_u := samplenum8+128;
+    // L
+    fp1.WriteData(samplenum8_u);
+
+    samplenum16 := @sample[2];
+    samplenum8 := samplenum16^ shr 8;
+    samplenum8_u := samplenum8+128;
+    // R
+    fp1.WriteData(samplenum8_u);
+    Inc(cnt);
+  end;
+
+  Writeln(Format('Sample Cnt:%d', [cnt]));
+
+  fp1.Free;
+  fp.Free;
+  Result := 0;
+end;
+
+function simplest_pcm16le_cut_singlechannel(const url: string; start_num, dur_num: Integer): Integer;
+var
+  fp, fp1, fp_stat: TBufferedFileStream;
+  writer: TStreamWriter;
+  sample: TArray<Byte>;
+  cnt: Integer;
+  samplenum: Int16;
+begin
+  fp := TBufferedFileStream.Create(url, fmOpenRead);
+  fp1 := TBufferedFileStream.Create(OUTPUT_DIR + 'output_cut.pcm', fmCreate);
+  fp_stat := TBufferedFileStream.Create(OUTPUT_DIR + 'output_cut.txt', fmCreate);
+  writer := TStreamWriter.Create(fp_stat);
+
+  cnt := 0;
+  SetLength(sample, 4);
+
+  while fp.Position < fp.Size do
+  begin
+    fp.ReadBuffer(sample[0],2);
+    if (cnt>start_num) and (cnt <= (start_num + dur_num)) then
+    begin
+      fp1.WriteBuffer(sample[0], 2);
+      samplenum := sample[1];
+      samplenum := samplenum * 256;
+      samplenum := samplenum + sample[0];
+      writer.Write(Format('%6d,', [samplenum]));
+      if (cnt mod 10) = 0 then
+        writer.WriteLine;
+    end;
+    Inc(cnt);
+  end;
+
+  writer.Free;
+  fp_stat.Free;
+  fp1.Free;
+  fp.Free;
+  Result := 0;
+end;
 end.
 

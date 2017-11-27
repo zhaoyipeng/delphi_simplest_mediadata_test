@@ -27,10 +27,15 @@ begin
 //
 //  simplest_pcm16le_halfvolumeleft('NocturneNo2inEflat_44.1k_s16le.pcm');
 
-  simplest_pcm16le_doublespeed('NocturneNo2inEflat_44.1k_s16le.pcm');
+//  simplest_pcm16le_doublespeed('NocturneNo2inEflat_44.1k_s16le.pcm');
+
+//  simplest_pcm16le_to_pcm8('NocturneNo2inEflat_44.1k_s16le.pcm');
+
+  simplest_pcm16le_cut_singlechannel('drum.pcm',2360,120);
+
 
 
   Writeln('all tests done.');
-  Readln;
+//  Readln;
 end;
 end.
