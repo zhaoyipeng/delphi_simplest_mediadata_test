@@ -30,6 +30,10 @@
 unit simplest_mediadata_h264;
 
 interface
+
+uses
+  System.Classes;
+
 type
   TNaluType = (
     NALU_TYPE_SLICE    = 1,
@@ -68,6 +72,10 @@ function FindStartCode2(Buf: PByte): Integer;
 function FindStartCode3(Buf: PByte): Integer;
 function GetAnnexbNALU(nalu: PNALU): Integer;
 
+var
+  h264bitstream: TFileStream;
+  info2: Integer = 0;
+  info3: Integer = 0;
 implementation
 
 function FindStartCode2(Buf: PByte): Integer;
@@ -94,77 +102,80 @@ var
 begin
   pos := 0;
   GetMem(Buf, nalu.max_size);
+  try
+    nalu.startcodeprefix_len := 3;
+    if 3 <> h264bitstream.Read(Buf[0], 3) then
+    begin
+      Exit(0);
+    end;
 
-//  if ((Buf = (unsigned char*)calloc (nalu->max_size , sizeof(char))) == NULL)
-//        printf ("GetAnnexbNALU: Could not allocate Buf memory\n");
-//
-//    nalu->startcodeprefix_len=3;
-//
-//    if (3 != fread (Buf, 1, 3, h264bitstream)){
-//        free(Buf);
-//        return 0;
-//    }
-//    info2 = FindStartCode2 (Buf);
-//    if(info2 != 1) {
-//        if(1 != fread(Buf+3, 1, 1, h264bitstream)){
-//            free(Buf);
-//            return 0;
-//        }
-//        info3 = FindStartCode3 (Buf);
-//        if (info3 != 1){
-//            free(Buf);
-//            return -1;
-//        }
-//        else {
-//            pos = 4;
-//            nalu->startcodeprefix_len = 4;
-//        }
-//    }
-//    else{
-//        nalu->startcodeprefix_len = 3;
-//        pos = 3;
-//    }
-//    StartCodeFound = 0;
-//    info2 = 0;
-//    info3 = 0;
-//
-//    while (!StartCodeFound){
-//        if (feof (h264bitstream)){
-//            nalu->len = (pos-1)-nalu->startcodeprefix_len;
-//            memcpy (nalu->buf, &Buf[nalu->startcodeprefix_len], nalu->len);
-//            nalu->forbidden_bit = nalu->buf[0] & 0x80; //1 bit
-//            nalu->nal_reference_idc = nalu->buf[0] & 0x60; // 2 bit
-//            nalu->nal_unit_type = (nalu->buf[0]) & 0x1f;// 5 bit
-//            free(Buf);
-//            return pos-1;
-//        }
-//        Buf[pos++] = fgetc (h264bitstream);
-//        info3 = FindStartCode3(&Buf[pos-4]);
-//        if(info3 != 1)
-//            info2 = FindStartCode2(&Buf[pos-3]);
-//        StartCodeFound = (info2 == 1 || info3 == 1);
-//    }
-//
-//    // Here, we have found another start code (and read length of startcode bytes more than we should
-//    // have.  Hence, go back in the file
-//    rewind = (info3 == 1)? -4 : -3;
-//
-//    if (0 != fseek (h264bitstream, rewind, SEEK_CUR)){
-//        free(Buf);
-//        printf("GetAnnexbNALU: Cannot fseek in the bit stream file");
-//    }
-//
-//    // Here the Start code, the complete NALU, and the next start code is in the Buf.
-//    // The size of Buf is pos, pos+rewind are the number of bytes excluding the next
-//    // start code, and (pos+rewind)-startcodeprefix_len is the size of the NALU excluding the start code
-//
-//    nalu->len = (pos+rewind)-nalu->startcodeprefix_len;
-//    memcpy (nalu->buf, &Buf[nalu->startcodeprefix_len], nalu->len);//
-//    nalu->forbidden_bit = nalu->buf[0] & 0x80; //1 bit
-//    nalu->nal_reference_idc = nalu->buf[0] & 0x60; // 2 bit
-//    nalu->nal_unit_type = (nalu->buf[0]) & 0x1f;// 5 bit
-//    free(Buf);
-//
+    info2 := FindStartCode2 (Buf);
+    if(info2 <> 1) then
+    begin
+      if(1 <> h264bitstream.Read(Buf[3], 1)) then
+      begin
+        Exit(0);
+      end;
+      info3 := FindStartCode3(Buf);
+      if (info3 <> 1) then
+      begin
+        Exit(-1);
+      end
+      else
+      begin
+        pos := 4;
+        nalu.startcodeprefix_len := 4;
+      end;
+    end
+    else
+    begin
+      nalu.startcodeprefix_len := 3;
+      pos := 3;
+    end;
+    StartCodeFound := 0;
+    info2 := 0;
+    info3 := 0;
+
+  //    while (!StartCodeFound){
+  //        if (feof (h264bitstream)){
+  //            nalu->len = (pos-1)-nalu->startcodeprefix_len;
+  //            memcpy (nalu->buf, &Buf[nalu->startcodeprefix_len], nalu->len);
+  //            nalu->forbidden_bit = nalu->buf[0] & 0x80; //1 bit
+  //            nalu->nal_reference_idc = nalu->buf[0] & 0x60; // 2 bit
+  //            nalu->nal_unit_type = (nalu->buf[0]) & 0x1f;// 5 bit
+  //            free(Buf);
+  //            return pos-1;
+  //        }
+  //        Buf[pos++] = fgetc (h264bitstream);
+  //        info3 = FindStartCode3(&Buf[pos-4]);
+  //        if(info3 != 1)
+  //            info2 = FindStartCode2(&Buf[pos-3]);
+  //        StartCodeFound = (info2 == 1 || info3 == 1);
+  //    }
+  //
+  //    // Here, we have found another start code (and read length of startcode bytes more than we should
+  //    // have.  Hence, go back in the file
+  //    rewind = (info3 == 1)? -4 : -3;
+  //
+  //    if (0 != fseek (h264bitstream, rewind, SEEK_CUR)){
+  //        free(Buf);
+  //        printf("GetAnnexbNALU: Cannot fseek in the bit stream file");
+  //    }
+  //
+  //    // Here the Start code, the complete NALU, and the next start code is in the Buf.
+  //    // The size of Buf is pos, pos+rewind are the number of bytes excluding the next
+  //    // start code, and (pos+rewind)-startcodeprefix_len is the size of the NALU excluding the start code
+  //
+  //    nalu->len = (pos+rewind)-nalu->startcodeprefix_len;
+  //    memcpy (nalu->buf, &Buf[nalu->startcodeprefix_len], nalu->len);//
+  //    nalu->forbidden_bit = nalu->buf[0] & 0x80; //1 bit
+  //    nalu->nal_reference_idc = nalu->buf[0] & 0x60; // 2 bit
+  //    nalu->nal_unit_type = (nalu->buf[0]) & 0x1f;// 5 bit
+  //    free(Buf);
+  //
+    finally
+      FreeMem(Buf);
+    end;
 //    return (pos+rewind);
 end;
 
