@@ -118,18 +118,37 @@ function simplest_rgb24_to_yuv420(const url_in: string; w, h, num: Integer; cons
 /// <param name="url_out">Location of Output RGB file.</param>
 function simplest_rgb24_colorbar(width, height: Integer; const url_out: string): Integer;
 
+
+/// <summary>
+/// Split Left and Right channel of 16LE PCM file.
+/// </summary>
+/// <param name="url">Location of PCM file.</param>
+function simplest_pcm16le_split(const url: string): Integer;
+
+/// <summary>
+/// Halve volume of Left channel of 16LE PCM file
+/// </summary>
+/// <param name="url">Location of PCM file.</param>
+function simplest_pcm16le_halfvolumeleft(const url: string): Integer;
+
+/// <summary>
+/// Re-sample to double the speed of 16LE PCM file
+/// </summary>
+/// <param name="url">Location of PCM file.</param>
+function simplest_pcm16le_doublespeed(const url: string): Integer;
+
 implementation
 
 function simplest_yuv420_split(const url: string; w, h, num: Integer): Integer;
 var
-  fp, fp1, fp2, fp3: TFileStream;
+  fp, fp1, fp2, fp3: TBufferedFileStream;
   pic: TArray<Byte>;
   I: Integer;
 begin
-  fp := TFileStream.Create(url, fmOpenRead);
-  fp1 := TFileStream.Create(OUTPUT_DIR + 'output_420_y.y', fmCreate);
-  fp2 := TFileStream.Create(OUTPUT_DIR + 'output_420_u.y', fmCreate);
-  fp3 := TFileStream.Create(OUTPUT_DIR + 'output_420_v.y', fmCreate);
+  fp := TBufferedFileStream.Create(url, fmOpenRead);
+  fp1 := TBufferedFileStream.Create(OUTPUT_DIR + 'output_420_y.y', fmCreate);
+  fp2 := TBufferedFileStream.Create(OUTPUT_DIR + 'output_420_u.y', fmCreate);
+  fp3 := TBufferedFileStream.Create(OUTPUT_DIR + 'output_420_v.y', fmCreate);
 
   SetLength(pic, w * h * 3 div 2);
 
@@ -154,14 +173,14 @@ end;
 
 function simplest_yuv444_split(const url: string; w, h, num: Integer): Integer;
 var
-  fp, fp1, fp2, fp3: TFileStream;
+  fp, fp1, fp2, fp3: TBufferedFileStream;
   pic: TArray<Byte>;
   I: Integer;
 begin
-  fp := TFileStream.Create(url, fmOpenRead);
-  fp1 := TFileStream.Create(OUTPUT_DIR + 'output_444_y.y', fmCreate);
-  fp2 := TFileStream.Create(OUTPUT_DIR + 'output_444_u.y', fmCreate);
-  fp3 := TFileStream.Create(OUTPUT_DIR + 'output_444_v.y', fmCreate);
+  fp := TBufferedFileStream.Create(url, fmOpenRead);
+  fp1 := TBufferedFileStream.Create(OUTPUT_DIR + 'output_444_y.y', fmCreate);
+  fp2 := TBufferedFileStream.Create(OUTPUT_DIR + 'output_444_u.y', fmCreate);
+  fp3 := TBufferedFileStream.Create(OUTPUT_DIR + 'output_444_v.y', fmCreate);
 
   SetLength(pic, w * h * 3);
 
@@ -186,12 +205,12 @@ end;
 
 function simplest_yuv420_gray(const url: string; w, h, num: Integer): Integer;
 var
-  fp, fp1: TFileStream;
+  fp, fp1: TBufferedFileStream;
   pic: TArray<Byte>;
   I: Integer;
 begin
-  fp := TFileStream.Create(url, fmOpenRead);
-  fp1 := TFileStream.Create(OUTPUT_DIR + 'output_gray.yuv', fmCreate);
+  fp := TBufferedFileStream.Create(url, fmOpenRead);
+  fp1 := TBufferedFileStream.Create(OUTPUT_DIR + 'output_gray.yuv', fmCreate);
 
   SetLength(pic, w * h * 3 div 2);
 
@@ -211,14 +230,14 @@ end;
 
 function simplest_yuv420_halfy(const url: string; w, h, num: Integer): Integer;
 var
-  fp, fp1: TFileStream;
+  fp, fp1: TBufferedFileStream;
   pic: TArray<Byte>;
   temp: Byte;
   I: Integer;
   J: Integer;
 begin
-  fp := TFileStream.Create(url, fmOpenRead);
-  fp1 := TFileStream.Create(OUTPUT_DIR + 'output_half.yuv', fmCreate);
+  fp := TBufferedFileStream.Create(url, fmOpenRead);
+  fp1 := TBufferedFileStream.Create(OUTPUT_DIR + 'output_half.yuv', fmCreate);
 
   SetLength(pic, w * h * 3 div 2);
 
@@ -243,14 +262,14 @@ end;
 
 function simplest_yuv420_border(const url: string; w, h, border, num: Integer): Integer;
 var
-  fp, fp1: TFileStream;
+  fp, fp1: TBufferedFileStream;
   pic: TArray<Byte>;
   I: Integer;
   J: Integer;
   K: Integer;
 begin
-  fp := TFileStream.Create(url, fmOpenRead);
-  fp1 := TFileStream.Create(OUTPUT_DIR + 'output_border.yuv', fmCreate);
+  fp := TBufferedFileStream.Create(url, fmOpenRead);
+  fp1 := TBufferedFileStream.Create(OUTPUT_DIR + 'output_border.yuv', fmCreate);
 
   SetLength(pic, w * h * 3 div 2);
 
@@ -282,7 +301,7 @@ var
   lum_inc: Single;
   lum_temp: Byte;
   uv_width, uv_height: Integer;
-  fp: TFileStream;
+  fp: TBufferedFileStream;
   data_y, data_u, data_v: TArray<Byte>;
   t, i, j: Integer;
 begin
@@ -295,7 +314,7 @@ begin
   SetLength(data_u, uv_width * uv_height);
   SetLength(data_v, uv_width * uv_height);
 
-  fp := TFileStream.Create(OUTPUT_DIR + url_out, fmCreate);
+  fp := TBufferedFileStream.Create(OUTPUT_DIR + url_out, fmCreate);
 
   //Output Info
   Writeln('Y, U, V value from picture''s left to right:');
@@ -337,14 +356,14 @@ end;
 
 function simplest_yuv420_psnr(const url1, url2: string; w, h, num: Integer): Integer;
 var
-  fp1, fp2: TFileStream;
+  fp1, fp2: TBufferedFileStream;
   pic1, pic2: TArray<Byte>;
   mse_sum, mse, psnr: Double;
   I: Integer;
   J: Integer;
 begin
-  fp1 := TFileStream.Create(url1, fmOpenRead);
-  fp2 := TFileStream.Create(url2, fmOpenRead);
+  fp1 := TBufferedFileStream.Create(url1, fmOpenRead);
+  fp2 := TBufferedFileStream.Create(url2, fmOpenRead);
 
   SetLength(pic1, w * h);
   SetLength(pic2, w * h);
@@ -375,15 +394,15 @@ end;
 
 function simplest_rgb24_split(const url: string; w, h, num: Integer): Integer;
 var
-  fp, fp1, fp2, fp3: TFileStream;
+  fp, fp1, fp2, fp3: TBufferedFileStream;
   pic: TArray<Byte>;
   I: Integer;
   j: Integer;
 begin
-  fp := TFileStream.Create(url, fmOpenRead);
-  fp1 := TFileStream.Create(OUTPUT_DIR + 'output_r.y', fmCreate);
-  fp2 := TFileStream.Create(OUTPUT_DIR + 'output_g.y', fmCreate);
-  fp3 := TFileStream.Create(OUTPUT_DIR + 'output_b.y', fmCreate);
+  fp := TBufferedFileStream.Create(url, fmOpenRead);
+  fp1 := TBufferedFileStream.Create(OUTPUT_DIR + 'output_r.y', fmCreate);
+  fp2 := TBufferedFileStream.Create(OUTPUT_DIR + 'output_g.y', fmCreate);
+  fp3 := TBufferedFileStream.Create(OUTPUT_DIR + 'output_b.y', fmCreate);
 
   SetLength(pic, w * h * 3);
 
@@ -418,7 +437,7 @@ var
   m_BMPInfoHeader: TBitmapInfoHeader;
   header_size: Integer;
   rgb24_buffer: TArray<Byte>;
-  fp_rgb24, fp_bmp: TFileStream;
+  fp_rgb24, fp_bmp: TBufferedFileStream;
   J: Integer;
   I: Integer;
   temp: Byte;
@@ -428,8 +447,8 @@ begin
 
   m_BMPHeader.bfType := $4D42;
   header_size := SizeOf(TBitmapFileHeader) + SizeOf(TBitmapInfoHeader);
-  fp_rgb24 := TFileStream.Create(rgb24path, fmOpenRead);
-  fp_bmp := TFileStream.Create(OUTPUT_DIR + bmppath, fmCreate);
+  fp_rgb24 := TBufferedFileStream.Create(rgb24path, fmOpenRead);
+  fp_bmp := TBufferedFileStream.Create(OUTPUT_DIR + bmppath, fmCreate);
 
   SetLength(rgb24_buffer, width * height * 3);
   fp_rgb24.ReadBuffer(rgb24_buffer[0], width * height * 3);
@@ -524,12 +543,12 @@ end;
 
 function simplest_rgb24_to_yuv420(const url_in: string; w, h, num: Integer; const url_out: string): Integer;
 var
-  fp, fp1: TFileStream;
+  fp, fp1: TBufferedFileStream;
   pic_rgb24, pic_yuv420: TArray<Byte>;
   I: Integer;
 begin
-  fp := TFileStream.Create(url_in, fmOpenRead);
-  fp1 := TFileStream.Create(OUTPUT_DIR + url_out, fmCreate);
+  fp := TBufferedFileStream.Create(url_in, fmOpenRead);
+  fp1 := TBufferedFileStream.Create(OUTPUT_DIR + url_out, fmCreate);
 
   SetLength(pic_rgb24, w * h * 3);
   SetLength(pic_yuv420, w * h * 3 div 2);
@@ -552,13 +571,13 @@ var
   data: TArray<Byte>;
   barwidth: Integer;
   filename: string;
-  fp: TFileStream;
+  fp: TBufferedFileStream;
   i, j, barnum: Integer;
 begin
   SetLength(data, width * height * 3);
   barwidth := width div 8;
 
-  fp := TFileStream.Create(OUTPUT_DIR + url_out, fmCreate);
+  fp := TBufferedFileStream.Create(OUTPUT_DIR + url_out, fmCreate);
 
   for j := 0 to height - 1 do
   begin
@@ -618,6 +637,92 @@ begin
     end;
   end;
   fp.WriteBuffer(data[0], width * height * 3);
+  fp.Free;
+  Result := 0;
+end;
+
+function simplest_pcm16le_split(const url: string): Integer;
+var
+  fp, fp1, fp2: TBufferedFileStream;
+  sample: TArray<Byte>;
+begin
+  fp := TBufferedFileStream.Create(url, fmOpenRead);
+  fp1 := TBufferedFileStream.Create(OUTPUT_DIR + 'output_l.pcm', fmCreate);
+  fp2 := TBufferedFileStream.Create(OUTPUT_DIR + 'output_r.pcm', fmCreate);
+
+  SetLength(sample, 4);
+
+  while fp.Position < fp.Size do
+  begin
+    fp.ReadBuffer(sample[0], 4);
+    // L
+    fp1.WriteBuffer(sample[0], 2);
+    // R
+    fp2.WriteBuffer(sample[2], 2);
+  end;
+
+  fp2.Free;
+  fp1.Free;
+  fp.Free;
+  Result := 0;
+end;
+
+function simplest_pcm16le_halfvolumeleft(const url: string): Integer;
+var
+  fp, fp1: TBufferedFileStream;
+  sample: TArray<Byte>;
+  samplenum: PSmallInt;
+begin
+  fp := TBufferedFileStream.Create(url, fmOpenRead);
+  fp1 := TBufferedFileStream.Create(OUTPUT_DIR + 'output_halfleft.pcm', fmCreate);
+
+  SetLength(sample, 4);
+
+  while fp.Position < fp.Size do
+  begin
+    fp.ReadBuffer(sample[0], 4);
+    samplenum := @sample[0];
+    samplenum^ := samplenum^ div 2;
+
+    // L
+    fp1.WriteBuffer(sample[0], 2);
+    // R
+    fp1.WriteBuffer(sample[2], 2);
+  end;
+
+  fp1.Free;
+  fp.Free;
+  Result := 0;
+end;
+
+function simplest_pcm16le_doublespeed(const url: string): Integer;
+var
+  fp, fp1: TBufferedFileStream;
+  sample: TArray<Byte>;
+  cnt: Integer;
+begin
+  fp := TBufferedFileStream.Create(url, fmOpenRead);
+  fp1 := TBufferedFileStream.Create(OUTPUT_DIR + 'output_doublespeed.pcm', fmCreate);
+
+  cnt := 0;
+  SetLength(sample, 4);
+
+  while fp.Position < fp.Size do
+  begin
+    fp.ReadBuffer(sample[0], 4);
+    if (cnt mod 2) = 0 then
+    begin
+      // L
+      fp1.WriteBuffer(sample[0], 2);
+      // R
+      fp1.WriteBuffer(sample[2], 2);
+    end;
+    Inc(cnt);
+  end;
+
+  Writeln(Format('Sample Cnt:%d', [cnt]));
+
+  fp1.Free;
   fp.Free;
   Result := 0;
 end;
