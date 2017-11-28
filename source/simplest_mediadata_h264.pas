@@ -74,7 +74,7 @@ type
 
 function FindStartCode2(Buf: PByte): Integer;
 function FindStartCode3(Buf: PByte): Integer;
-function GetAnnexbNALU(nalu: PNALU): Integer;
+function GetAnnexbNALU(var nalu: TNALU): Integer;
 
 /// <summary>
 /// Analysis H.264 Bitstream
@@ -104,7 +104,7 @@ begin
     Result := 1;
 end;
 
-function GetAnnexbNALU(nalu: PNALU): Integer;
+function GetAnnexbNALU(var nalu: TNALU): Integer;
 var
   pos: Integer;
   rewind: Integer;
@@ -173,7 +173,7 @@ begin
     else
       rewind := -3;
 
-    if h264bitstream.Seek(rewind, TSeekOrigin.soCurrent) <> 0 then
+    if h264bitstream.Seek(rewind, TSeekOrigin.soCurrent) = -1 then
     begin
       Writeln('GetAnnexbNALU: Cannot fseek in the bit stream file');
     end;
@@ -191,7 +191,7 @@ end;
 
 function simplest_h264_parser(const url: string): Integer;
 var
-  n: PNALU;
+  n: TNALU;
   buffersize: Integer;
   myout: TFileStream;
   writer: TStreamWriter;
@@ -203,18 +203,16 @@ begin
   myout := TFileStream.Create(OUTPUT_DIR + 'output_log.txt', fmCreate);
   writer := TStreamWriter.Create(myout);
 
-  h264bitstream := TFileStream.Create(url, fmOpenRead);
-
-  New(n);
+  h264bitstream := TBufferedFileStream.Create(url, fmOpenRead);
 
   n.max_size := buffersize;
   GetMem(n.buf, buffersize);
 
   data_offset := 0;
   nal_num := 0;
-  writer.WriteLine('-----+-------- NALU Table ------+---------+');
-  writer.WriteLine(' NUM |    POS  |    IDC |  TYPE |   LEN   |');
-  writer.WriteLine('-----+---------+--------+-------+---------+');
+  WriteLn('-----+-------- NALU Table ------+---------+');
+  WriteLn(' NUM |    POS  |    IDC |  TYPE |   LEN   |');
+  WriteLn('-----+---------+--------+-------+---------+');
 
   while (h264bitstream.Position < h264bitstream.Size) do
   begin
@@ -258,7 +256,7 @@ begin
       NALU_PRIORITY_HIGHEST:
         idc_str := 'HIGHEST';
     end;
-    writer.WriteLine(Format('%5d| %8d| %7s| %6s| %8d|', [nal_num, data_offset, idc_str, type_str, n.len]));
+    WriteLn(Format('%5d| %8d| %7s| %6s| %8d|', [nal_num, data_offset, idc_str, type_str, n.len]));
 
     data_offset := data_offset + data_lenth;
 
@@ -266,14 +264,10 @@ begin
   end;
 
   //Free
-  if (n <> nil) then
+  if (n.buf <> nil) then
   begin
-    if (n.buf <> nil) then
-    begin
-      FreeMem(n.buf);
-      n.buf := nil;
-    end;
-    Dispose(n);
+    FreeMem(n.buf);
+    n.buf := nil;
   end;
 
   h264bitstream.Free;
