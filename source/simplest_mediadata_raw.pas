@@ -209,11 +209,11 @@ begin
   begin
     fp.ReadBuffer(pic[0], w * h * 3 div 2);
     //Y
-    fp1.WriteBuffer(pic[0], w * h);
+    fp1.Write(pic[0], w * h);
     //U
-    fp2.WriteBuffer(pic[w * h], w * h div 4);
+    fp2.Write(pic[w * h], w * h div 4);
     //V
-    fp3.WriteBuffer(pic[w * h * 5 div 4], w * h div 4);
+    fp3.Write(pic[w * h * 5 div 4], w * h div 4);
   end;
 
   fp3.Free;
@@ -241,11 +241,11 @@ begin
   begin
     fp.ReadBuffer(pic[0], w * h * 3);
     //Y
-    fp1.WriteBuffer(pic[0], w * h);
+    fp1.Write(pic[0], w * h);
     //U
-    fp2.WriteBuffer(pic[w * h], w * h);
+    fp2.Write(pic[w * h], w * h);
     //V
-    fp3.WriteBuffer(pic[w * h * 2], w * h);
+    fp3.Write(pic[w * h * 2], w * h);
   end;
 
   fp3.Free;
@@ -272,7 +272,7 @@ begin
     fp.ReadBuffer(pic[0], w * h * 3 div 2);
     //Gray
     FillChar(pic[w * h], w * h div 2, 128);
-    fp1.WriteBuffer(pic[0], w * h * 3 div 2);
+    fp1.Write(pic[0], w * h * 3 div 2);
   end;
 
   fp1.Free;
@@ -304,7 +304,7 @@ begin
       pic[J] := temp;
     end;
 
-    fp1.WriteBuffer(pic[0], w * h * 3 div 2);
+    fp1.Write(pic[0], w * h * 3 div 2);
   end;
 
   fp1.Free;
@@ -339,7 +339,7 @@ begin
       end;
     end;
 
-    fp1.WriteBuffer(pic[0], w * h * 3 div 2);
+    fp1.Write(pic[0], w * h * 3 div 2);
   end;
 
   fp1.Free;
@@ -399,9 +399,9 @@ begin
     for i := 0 to uv_width - 1 do
       data_v[j * uv_width + i] := 128;
   end;
-  fp.WriteBuffer(data_y[0], width * height);
-  fp.WriteBuffer(data_u[0], uv_width * uv_height);
-  fp.WriteBuffer(data_v[0], uv_width * uv_height);
+  fp.Write(data_y[0], width * height);
+  fp.Write(data_u[0], uv_width * uv_height);
+  fp.Write(data_v[0], uv_width * uv_height);
 
   fp.Free;
   Result := 0;
@@ -466,11 +466,11 @@ begin
     while j < w * h * 3 do
     begin
       //R
-      fp1.WriteBuffer(pic[j], 1);
+      fp1.Write(pic[j], 1);
       //G
-      fp2.WriteBuffer(pic[j + 1], 1);
+      fp2.Write(pic[j + 1], 1);
       //B
-      fp3.WriteBuffer(pic[j + 2], 1);
+      fp3.Write(pic[j + 2], 1);
 
       Inc(j, 3);
     end;
@@ -517,8 +517,8 @@ begin
   m_BMPInfoHeader.biBitCount := 24;
   m_BMPInfoHeader.biSizeImage := width * height * 3;
 
-  fp_bmp.WriteBuffer(m_BMPHeader, SizeOf(TBitmapFileHeader));
-  fp_bmp.WriteBuffer(m_BMPInfoHeader, SizeOf(TBitmapInfoHeader));
+  fp_bmp.Write(m_BMPHeader, SizeOf(TBitmapFileHeader));
+  fp_bmp.Write(m_BMPInfoHeader, SizeOf(TBitmapInfoHeader));
 
   //BMP save R1|G1|B1,R2|G2|B2 as B1|G1|R1,B2|G2|R2
   //It saves pixel data in Little Endian
@@ -530,7 +530,7 @@ begin
       rgb24_buffer[(J * width + I) * 3 + 2] := rgb24_buffer[(J * width + I) * 3 + 0];
       rgb24_buffer[(J * width + I) * 3 + 0] := temp;
     end;
-  fp_bmp.WriteBuffer(rgb24_buffer, width * height * 3);
+  fp_bmp.Write(rgb24_buffer, width * height * 3);
   fp_bmp.Free;
   fp_rgb24.Free;
   Writeln(Format('Finish generate %s', [bmppath]));
@@ -610,7 +610,7 @@ begin
   begin
     fp.ReadBuffer(pic_rgb24[0], w * h * 3);
     RGB24_TO_YUV420(@pic_rgb24[0], w, h, @pic_yuv420[0]);
-    fp1.WriteBuffer(pic_yuv420[0], w * h * 3 div 2);
+    fp1.Write(pic_yuv420[0], w * h * 3 div 2);
   end;
 
   fp1.Free;
@@ -688,7 +688,7 @@ begin
       end;
     end;
   end;
-  fp.WriteBuffer(data[0], width * height * 3);
+  fp.Write(data[0], width * height * 3);
   fp.Free;
   Result := 0;
 end;
@@ -703,14 +703,12 @@ begin
   fp2 := TBufferedFileStream.Create(OUTPUT_DIR + 'output_r.pcm', fmCreate);
 
   SetLength(sample, 4);
-
-  while fp.Position < fp.Size do
+  while fp.Read(sample[0], 4) = 4 do
   begin
-    fp.ReadBuffer(sample[0], 4);
     // L
-    fp1.WriteBuffer(sample[0], 2);
+    fp1.Write(sample[0], 2);
     // R
-    fp2.WriteBuffer(sample[2], 2);
+    fp2.Write(sample[2], 2);
   end;
 
   fp2.Free;
@@ -730,16 +728,15 @@ begin
 
   SetLength(sample, 4);
 
-  while fp.Position < fp.Size do
+  while fp.Read(sample[0], 4) = 4 do
   begin
-    fp.ReadBuffer(sample[0], 4);
     samplenum := @sample[0];
     samplenum^ := samplenum^ div 2;
 
     // L
-    fp1.WriteBuffer(sample[0], 2);
+    fp1.Write(sample[0], 2);
     // R
-    fp1.WriteBuffer(sample[2], 2);
+    fp1.Write(sample[2], 2);
   end;
 
   fp1.Free;
@@ -759,15 +756,14 @@ begin
   cnt := 0;
   SetLength(sample, 4);
 
-  while fp.Position < fp.Size do
+  while fp.Read(sample[0], 4) = 4 do
   begin
-    fp.ReadBuffer(sample[0], 4);
     if (cnt mod 2) = 0 then
     begin
       // L
-      fp1.WriteBuffer(sample[0], 2);
+      fp1.Write(sample[0], 2);
       // R
-      fp1.WriteBuffer(sample[2], 2);
+      fp1.Write(sample[2], 2);
     end;
     Inc(cnt);
   end;
@@ -794,9 +790,8 @@ begin
   cnt := 0;
   SetLength(sample, 4);
 
-  while fp.Position < fp.Size do
+  while fp.Read(sample[0], 4) = 4 do
   begin
-    fp.ReadBuffer(sample[0], 4);
     samplenum16 := @sample[0];
     samplenum8 := samplenum16^ shr 8;
     //(0-255)
@@ -835,12 +830,11 @@ begin
   cnt := 0;
   SetLength(sample, 4);
 
-  while fp.Position < fp.Size do
+  while fp.Read(sample[0], 2) = 2 do
   begin
-    fp.ReadBuffer(sample[0], 2);
     if (cnt > start_num) and (cnt <= (start_num + dur_num)) then
     begin
-      fp1.WriteBuffer(sample[0], 2);
+      fp1.Write(sample[0], 2);
       samplenum := sample[1];
       samplenum := samplenum * 256;
       samplenum := samplenum + sample[0];
@@ -887,7 +881,7 @@ var
   pcmFMT: WAVE_FMT;
   pcmDATA: WAVE_DATA;
   m_pcmData: Word;
-  fp, fpout: TFileStream;
+  fp, fpout: TBufferedFileStream;
 begin
   if (channels = 0) or (sample_rate = 0) then
   begin
@@ -913,25 +907,24 @@ begin
   pcmFMT.wChannels := channels;
   pcmFMT.wFormatTag := WAVE_FORMAT_PCM;
 
-  fpout.WriteBuffer(pcmFMT, SizeOf(WAVE_FMT));
+  fpout.Write(pcmFMT, SizeOf(WAVE_FMT));
 
   //WAVE_DATA;
   pcmDATA.fccID := mmioStringToFOURCC('data', 0);
   pcmDATA.dwSize := 0;
   fpout.Seek(SizeOf(WAVE_DATA), TSeekOrigin.soCurrent);
-  while (fp.Position < fp.Size) do
+  while fp.Read(m_pcmData, 2) = 2 do
   begin
-    fp.ReadData(m_pcmData);
-    fpout.WriteData(m_pcmData);
+    fpout.Write(m_pcmData, 2);
     Inc(pcmDATA.dwSize, 2);
   end;
 
   pcmHEADER.dwSize := 36 + pcmDATA.dwSize;
 
   fpout.Seek(0, TSeekOrigin.soBeginning);
-  fpout.WriteBuffer(pcmHEADER, sizeof(WAVE_HEADER));
+  fpout.Write(pcmHEADER, sizeof(WAVE_HEADER));
   fpout.Seek(sizeof(WAVE_FMT), TSeekOrigin.soCurrent);
-  fpout.WriteBuffer(pcmDATA, sizeof(WAVE_DATA));
+  fpout.Write(pcmDATA, sizeof(WAVE_DATA));
 
   fpout.Free;
   fp.Free;

@@ -110,6 +110,7 @@ var
   rewind: Integer;
   StartCodeFound: Boolean;
   Buf: TArray<Byte>;
+  FileSize: Int64;
 begin
   pos := 0;
   SetLength(Buf, nalu.max_size);
@@ -146,9 +147,10 @@ begin
   info2 := 0;
   info3 := 0;
 
+  FileSize := h264bitstream.Size;
   while (not StartCodeFound) do
   begin
-      if (h264bitstream.Position >= h264bitstream.Size) then
+      if (h264bitstream.Position >= FileSize) then
       begin
         nalu.len := (pos-1)-nalu.startcodeprefix_len;
         Move(Buf[nalu.startcodeprefix_len], nalu.buf^, nalu.len);
@@ -157,7 +159,7 @@ begin
         nalu.nal_unit_type := (nalu.buf[0]) and $1f;// 5 bit
         Exit(pos-1);
       end;
-      h264bitstream.ReadData(Buf[pos]);
+      h264bitstream.Read(Buf[pos], 1);
 
       Inc(pos);
       info3 := FindStartCode3(@Buf[pos-4]);
