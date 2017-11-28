@@ -3,7 +3,8 @@ unit simplest_mediadata_main;
 interface
 
 uses
-  simplest_mediadata_raw;
+  simplest_mediadata_raw,
+  simplest_mediadata_h264;
 
 procedure test_all;
 implementation
@@ -31,9 +32,12 @@ begin
 
 //  simplest_pcm16le_to_pcm8('NocturneNo2inEflat_44.1k_s16le.pcm');
 
-  simplest_pcm16le_cut_singlechannel('drum.pcm',2360,120);
+//  simplest_pcm16le_cut_singlechannel('drum.pcm',2360,120);
 
-  simplest_pcm16le_to_wave('NocturneNo2inEflat_44.1k_s16le.pcm',2,44100,'output_nocturne.wav');
+//  simplest_pcm16le_to_wave('NocturneNo2inEflat_44.1k_s16le.pcm',2,44100,'output_nocturne.wav');
+
+  simplest_h264_parser('sintel.h264');
+
 
 
   Writeln('all tests done.');
