@@ -8,7 +8,9 @@ uses
   System.SysUtils,
   simplest_mediadata_raw in 'simplest_mediadata_raw.pas',
   simplest_mediadata_main in 'simplest_mediadata_main.pas',
-  simplest_mediadata_h264 in 'simplest_mediadata_h264.pas';
+  simplest_mediadata_h264 in 'simplest_mediadata_h264.pas',
+  simplest_mediadata_aac in 'simplest_mediadata_aac.pas',
+  simplest_mediadata_flv in 'simplest_mediadata_flv.pas';
 
 begin
   try
