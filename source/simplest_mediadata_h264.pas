@@ -1,20 +1,20 @@
-(**
- * ×î¼òµ¥µÄÊÓÒôÆµÊı¾İ´¦ÀíÊ¾Àı
+ï»¿(**
+ * æœ€ç®€å•çš„è§†éŸ³é¢‘æ•°æ®å¤„ç†ç¤ºä¾‹
  * Simplest MediaData Test
  *
- * À×Ïöæè Lei Xiaohua
+ * é›·éœ„éª… Lei Xiaohua
  * leixiaohua1020@126.com
- * ÖĞ¹ú´«Ã½´óÑ§/Êı×ÖµçÊÓ¼¼Êõ
+ * ä¸­å›½ä¼ åª’å¤§å­¦/æ•°å­—ç”µè§†æŠ€æœ¯
  * Communication University of China / Digital TV Technology
  * http://blog.csdn.net/leixiaohua1020
  *
- * ±¾ÏîÄ¿°üº¬ÈçÏÂ¼¸ÖÖÊÓÒôÆµ²âÊÔÊ¾Àı£º
- *  (1)ÏñËØÊı¾İ´¦Àí³ÌĞò¡£°üº¬RGBºÍYUVÏñËØ¸ñÊ½´¦ÀíµÄº¯Êı¡£
- *  (2)ÒôÆµ²ÉÑùÊı¾İ´¦Àí³ÌĞò¡£°üº¬PCMÒôÆµ²ÉÑù¸ñÊ½´¦ÀíµÄº¯Êı¡£
- *  (3)H.264ÂëÁ÷·ÖÎö³ÌĞò¡£¿ÉÒÔ·ÖÀë²¢½âÎöNALU¡£
- *  (4)AACÂëÁ÷·ÖÎö³ÌĞò¡£¿ÉÒÔ·ÖÀë²¢½âÎöADTSÖ¡¡£
- *  (5)FLV·â×°¸ñÊ½·ÖÎö³ÌĞò¡£¿ÉÒÔ½«FLVÖĞµÄMP3ÒôÆµÂëÁ÷·ÖÀë³öÀ´¡£
- *  (6)UDP-RTPĞ­Òé·ÖÎö³ÌĞò¡£¿ÉÒÔ½«·ÖÎöUDP/RTP/MPEG-TSÊı¾İ°ü¡£
+ * æœ¬é¡¹ç›®åŒ…å«å¦‚ä¸‹å‡ ç§è§†éŸ³é¢‘æµ‹è¯•ç¤ºä¾‹ï¼š
+ *  (1)åƒç´ æ•°æ®å¤„ç†ç¨‹åºã€‚åŒ…å«RGBå’ŒYUVåƒç´ æ ¼å¼å¤„ç†çš„å‡½æ•°ã€‚
+ *  (2)éŸ³é¢‘é‡‡æ ·æ•°æ®å¤„ç†ç¨‹åºã€‚åŒ…å«PCMéŸ³é¢‘é‡‡æ ·æ ¼å¼å¤„ç†çš„å‡½æ•°ã€‚
+ *  (3)H.264ç æµåˆ†æç¨‹åºã€‚å¯ä»¥åˆ†ç¦»å¹¶è§£æNALUã€‚
+ *  (4)AACç æµåˆ†æç¨‹åºã€‚å¯ä»¥åˆ†ç¦»å¹¶è§£æADTSå¸§ã€‚
+ *  (5)FLVå°è£…æ ¼å¼åˆ†æç¨‹åºã€‚å¯ä»¥å°†FLVä¸­çš„MP3éŸ³é¢‘ç æµåˆ†ç¦»å‡ºæ¥ã€‚
+ *  (6)UDP-RTPåè®®åˆ†æç¨‹åºã€‚å¯ä»¥å°†åˆ†æUDP/RTP/MPEG-TSæ•°æ®åŒ…ã€‚
  *
  * This project contains following samples to handling multimedia data:
  *  (1) Video pixel data handling program. It contains several examples to handle RGB and YUV data.
@@ -25,6 +25,8 @@
  *  (6) UDP-RTP protocol analysis program. It can analysis UDP/RTP/MPEG-TS Packet.
  *
  * Translated to delphi by Zhao Yipeng
+ * zhaoyipeng@hotmail.com
+ * https://github.com/zhaoyipeng/delphi_simplest_mediadata_test
  *)
 
 unit simplest_mediadata_h264;

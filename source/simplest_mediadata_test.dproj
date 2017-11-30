@@ -168,6 +168,7 @@
         <DCCReference Include="simplest_mediadata_h264.pas"/>
         <DCCReference Include="simplest_mediadata_aac.pas"/>
         <DCCReference Include="simplest_mediadata_flv.pas"/>
+        <DCCReference Include="simplest_mediadata_udp.pas"/>
         <None Include="Profiling\AQtimeModule1.aqt"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>

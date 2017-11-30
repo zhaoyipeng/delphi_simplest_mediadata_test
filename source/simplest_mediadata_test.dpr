@@ -10,7 +10,8 @@ uses
   simplest_mediadata_main in 'simplest_mediadata_main.pas',
   simplest_mediadata_h264 in 'simplest_mediadata_h264.pas',
   simplest_mediadata_aac in 'simplest_mediadata_aac.pas',
-  simplest_mediadata_flv in 'simplest_mediadata_flv.pas';
+  simplest_mediadata_flv in 'simplest_mediadata_flv.pas',
+  simplest_mediadata_udp in 'simplest_mediadata_udp.pas';
 
 begin
   try

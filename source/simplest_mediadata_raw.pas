@@ -25,6 +25,8 @@
  *  (6) UDP-RTP protocol analysis program. It can analysis UDP/RTP/MPEG-TS Packet.
  *
  * Translated to delphi by Zhao Yipeng
+ * zhaoyipeng@hotmail.com
+ * https://github.com/zhaoyipeng/delphi_simplest_mediadata_test
  *)
 unit simplest_mediadata_raw;
 
